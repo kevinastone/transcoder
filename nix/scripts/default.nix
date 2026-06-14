@@ -17,4 +17,15 @@
     ];
     text = builtins.readFile ./push-multiarch.sh;
   };
+
+  dive-archive = pkgs.writeShellApplication {
+    name = "dive-archive";
+    runtimeInputs = with pkgs; [
+      dive
+      gzip
+    ];
+    text = ''
+      dive --source docker-archive <(gunzip -c "''${1:-result}")
+    '';
+  };
 }

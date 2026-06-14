@@ -74,6 +74,7 @@
             packages = [
               dive
               skopeo
+              scripts.dive-archive
             ];
           };
       }
