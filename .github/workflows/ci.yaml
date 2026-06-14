@@ -66,7 +66,7 @@ jobs:
           cp -L result-amd64 result-amd64.tar.gz
 
       - name: Upload AMD64 artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: image-amd64
           path: result-amd64.tar.gz
@@ -98,7 +98,7 @@ jobs:
           cp -L result-arm64 result-arm64.tar.gz
 
       - name: Upload ARM64 artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: image-arm64
           path: result-arm64.tar.gz
