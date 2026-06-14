@@ -121,13 +121,13 @@ jobs:
       - *cache-nix-store
 
       - name: Download AMD64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: image-amd64
           path: artifacts-amd64
 
       - name: Download ARM64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: image-arm64
           path: artifacts-arm64
