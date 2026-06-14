@@ -31,33 +31,33 @@
           };
         };
 
-        ffmpeg = pkgs.ffmpeg-headless;
+        ffmpegPkg = pkgs.ffmpeg-headless;
 
         scripts = pkgs.callPackage ./nix/scripts { };
       in
       {
         packages = rec {
-          image =
+          ffmpeg =
             with pkgs;
             dockerTools.buildImage rec {
               name = "transcoder";
-              tag = ffmpeg.version;
+              tag = ffmpegPkg.version;
               copyToRoot = with dockerTools; [
                 usrBinEnv
                 binSh
                 fakeNss
                 bash
                 coreutils
-                ffmpeg
+                ffmpegPkg
                 scripts.argo-ffmpeg-progress
               ];
-              config.Entrypoint = [ (lib.getExe ffmpeg) ];
+              config.Entrypoint = [ (lib.getExe ffmpegPkg) ];
               config.Labels = {
                 "org.opencontainers.image.title" = name;
               };
             };
 
-          default = image;
+          default = ffmpeg;
 
           inherit (scripts) push-multiarch;
         };

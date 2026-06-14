@@ -62,7 +62,7 @@ jobs:
 
       - name: Build AMD64 image
         run: |
-          nix build .#image --out-link result-amd64 -L
+          nix build .#ffmpeg --out-link result-amd64 -L
           cp -L result-amd64 result-amd64.tar.gz
 
       - name: Upload AMD64 artifact
@@ -94,7 +94,7 @@ jobs:
 
       - name: Build ARM64 image
         run: |
-          nix build .#image --out-link result-arm64 -L
+          nix build .#ffmpeg --out-link result-arm64 -L
           cp -L result-arm64 result-arm64.tar.gz
 
       - name: Upload ARM64 artifact
@@ -140,7 +140,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ghcr.io/${{ github.repository_owner }}/ffmpeg
           tags: |
             type=raw,value=${{ steps.ffmpeg-version.outputs.version }}
             type=ref,event=branch
@@ -157,4 +157,4 @@ jobs:
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
         run: |
-          nix run .#push-multiarch -- "ghcr.io/${{ github.repository }}" artifacts-amd64/result-amd64.tar.gz artifacts-arm64/result-arm64.tar.gz
+          nix run .#push-multiarch -- "ghcr.io/${{ github.repository_owner }}/ffmpeg" artifacts-amd64/result-amd64.tar.gz artifacts-arm64/result-arm64.tar.gz
