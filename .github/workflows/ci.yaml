@@ -1,0 +1,152 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+  id-token: write
+  actions: write
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - &cache-nix-store
+        name: Cache Nix Store
+        uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: ${{ runner.os }}-nix-${{ hashFiles('flake.lock') }}
+
+      - name: Run Nix checks
+        run: nix flake check -L
+
+  build-amd64:
+    name: Build AMD64 Image
+    needs: [test]
+    runs-on: ubuntu-24.04
+    if: |
+      github.event_name == 'release' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - *cache-nix-store
+
+      - name: Build AMD64 image
+        run: |
+          nix build .#image --out-link result-amd64 -L
+          cp -L result-amd64 result-amd64.tar.gz
+
+      - name: Upload AMD64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-amd64
+          path: result-amd64.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
+  build-arm64:
+    name: Build ARM64 Image
+    needs: [test]
+    runs-on: ubuntu-24.04-arm
+    if: |
+      github.event_name == 'release' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - *cache-nix-store
+
+      - name: Build ARM64 image
+        run: |
+          nix build .#image --out-link result-arm64 -L
+          cp -L result-arm64 result-arm64.tar.gz
+
+      - name: Upload ARM64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-arm64
+          path: result-arm64.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
+  push-multiarch:
+    name: Push Multi-Arch Image
+    needs: [build-amd64, build-arm64]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - *cache-nix-store
+
+      - name: Download AMD64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-amd64
+          path: artifacts-amd64
+
+      - name: Download ARM64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-arm64
+          path: artifacts-arm64
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ⬆️ Push Multi-Arch Image to GHCR
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          nix run .#push-multiarch -- "ghcr.io/${{ github.repository }}" artifacts-amd64/result-amd64.tar.gz artifacts-arm64/result-arm64.tar.gz
