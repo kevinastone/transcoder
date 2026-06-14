@@ -104,7 +104,8 @@
           image =
             with pkgs;
             dockerTools.buildImage rec {
-              name = "transcoder";
+              name = "ffmpeg";
+              tag = ffmpeg.version;
               copyToRoot =
                 with dockerTools;
                 [
