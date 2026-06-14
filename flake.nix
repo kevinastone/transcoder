@@ -49,6 +49,7 @@
                 bash
                 coreutils
                 ffmpegPkg
+                jq
                 scripts.argo-ffmpeg-progress
               ];
               config.Entrypoint = [ (lib.getExe ffmpegPkg) ];
