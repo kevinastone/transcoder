@@ -104,17 +104,17 @@
           image =
             with pkgs;
             dockerTools.buildImage rec {
-              name = "ffmpeg";
+              name = "transcoder";
               tag = ffmpeg.version;
               copyToRoot =
                 with dockerTools;
                 [
                   usrBinEnv
                   binSh
+                  fakeNss
+                  bash
                   coreutils
                   ffmpeg
-                  caCertificates
-                  fakeNss
                 ]
                 ++ scripts;
               config.Entrypoint = [ (lib.getExe ffmpeg) ];
