@@ -56,7 +56,7 @@ graph LR
 
 ## 📁 Repository & Container Utilities
 
-Utilities defined in [nix/scripts](file:///Users/kstone/Documents/transcoder/nix/scripts) serve different roles within the container and development environment:
+Utilities defined in [nix/scripts](nix/scripts) serve different roles within the container and development environment:
 
 ### Packaged in the Container Image
 - **`argo-ffmpeg-progress`**: The only utility packaged directly into the final container image. It reads `ffmpeg`'s progress updates from `stdin`, converts the current processed time to a percentage, and writes `<percent>/100` to a target file.
@@ -153,7 +153,7 @@ nix fmt
 
 ## 🤖 CI/CD & Publishing
 
-The GitHub Actions workflow defined in [.github/workflows/ci.yaml](file:///Users/kstone/Documents/transcoder/.github/workflows/ci.yaml) automates validation and deployment:
+The GitHub Actions workflow defined in [.github/workflows/ci.yaml](.github/workflows/ci.yaml) automates validation and deployment:
 
 1. **Linting & Validation**: Runs `nix flake check` to validate formatting and package outputs.
 2. **Build Matrix**: Spawns runners to build both `amd64` and `arm64` image tarballs.

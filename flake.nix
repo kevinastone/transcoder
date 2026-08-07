@@ -40,7 +40,7 @@
           ffmpeg =
             with pkgs;
             dockerTools.buildImage rec {
-              name = "transcoder";
+              name = "ffmpeg";
               tag = ffmpegPkg.version;
               copyToRoot = with dockerTools; [
                 usrBinEnv

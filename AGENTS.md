@@ -1,31 +1,40 @@
 # Developer & AI Agent Guidelines (AGENTS.md)
 
-Welcome! If you are an AI coding assistant (like Antigravity) or a developer onboarding to this repository, please read these instructions to understand the code architecture, tooling, and coding standards of Lynceus.
+Welcome! If you are an AI coding assistant (like Antigravity) or a developer onboarding to this repository, please read these instructions to understand the code architecture, tooling, and coding standards of Transcoder.
 
 ---
 
 ## 🛠️ Tooling & Commands
 
 ### 1. Code Formatting
-Transcoder is fully Nix-integrated. To format the entire codebase, always run the following command:
+Transcoder is fully Nix-integrated. To format the entire codebase, always run:
 ```bash
 nix fmt
 ```
 
-### 2. Building & Testing
-To verify code correctness:
-- Run all checks: `cargo check`
-- Run the test suite: `cargo test`
-- Build the binary in development: `cargo build`
-- Build the binary in release: `cargo build --release`
+### 2. Building & Validating
+To verify the flake config, checks, and formatting:
+```bash
+nix flake check
+```
 
-### 3. Container Images (Nix)
-This project builds highly-reproducible, minimal Docker/OCI images using Nix:
-- Build the OCI container tarball: `nix build .#image`
-- Push the build artifact via Skopeo (integrated into Nix):
-  ```bash
-  nix run .#skopeo -- --insecure-policy copy --all docker-archive:./result docker://<destination>
-  ```
+To build the OCI container image locally (which produces the symlink `./result` pointing to the built tarball):
+```bash
+nix build .#ffmpeg
+# or simply:
+nix build
+```
+
+### 3. Debugging & Inspecting
+Enter the Nix devShell to load development tools like `dive`, `skopeo`, and custom helper scripts:
+```bash
+nix develop
+```
+
+Once in the devShell, you can inspect the OCI container layers using the `dive-archive` helper:
+```bash
+dive-archive ./result
+```
 
 ### 4. Git Commits
 Do **not** commit any code changes using `git commit` without explicitly asking and obtaining confirmation from the user first.
@@ -34,6 +43,11 @@ Do **not** commit any code changes using `git commit` without explicitly asking 
 
 ## 📁 Repository Structure
 
-- `flake.nix`: Nix package definitions, OCI image configuration, formatting, and devShell.
+- `flake.nix`: Nix package definitions, OCI image configuration, formatting rules, and devShell.
+- `nix/scripts/`:
+  - `argo-ffmpeg-progress.sh`: The progress tracker packaged directly into the OCI container.
+  - `push-multiarch.sh`: CI/CD helper script to assemble and push multi-architecture OCI manifests.
+  - `default.nix`: Nix packaging expressions for the shell scripts.
 - `.github/workflows/`:
-  - `ci.yaml`: CD pipeline building OCI images with Nix and delivering to GHCR upon test success.
+  - `ci.yaml`: CI/CD pipeline that validates the flake, builds images for amd64/arm64, and publishes them to GHCR.
+- `AGENTS.md`: Onboarding guidelines for developers and AI agents (this file).
